@@ -44,12 +44,12 @@ to run on 3+ with only [minor modifications](https://docs.python.org/2/library/2
 Almost all configuration options that would need to be changed are in the
 modules within the `cfg_ac` directory.  Be sure to look into and configure each of these files.
 
-#### ac_doctempl:
+#### `ac_doctempl`:
 This is used for templates for RTF documents generated when
 patrons lack email addresses, but have notices.  For these notices,
 postal address information is retrieved from the notices file.
 
-#### ac_emails:
+#### `ac_emails`:
 This is used for deciding who gets which alerts, such as a
 summary of the run, a csv list of the run, a csv list of just ILL related items, RTF files
 that are to be printed for patrons that are missing email addresses, etc.
@@ -60,16 +60,16 @@ notices file.  It is recommended you set this for your first runs to your own em
 to allow for testing before use in full production.  Also, this variable being set also overrides
 the normal renaming of the notices file.
 
-#### ac_emailtmpl:
+#### `ac_emailtmpl`:
 Templates used to format the emails sent to patrons.
 
-#### ac_files:
+#### `ac_files`:
 File locations.  You'll want to edit at least the notices file location.  To mimic the
 function of the Reporter client, after a run, the notices file is renamed to append the  current
 day and time.  Also note, if the overideEmail variable is set in ac_emails, this renaming function
 is not performed.
 
-#### ac_misc:
+#### `ac_misc`:
 Remaining variables, such as a read-only database user/password.
 
 ### Author:
