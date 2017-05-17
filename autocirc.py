@@ -14,8 +14,9 @@ from cfg_ac import *	# loads all config files (setting filenames, email addresse
 
 
 ######################
-# autocircucat
+# autocirc
 # By: Bruce A. Orcutt
+# Contact: bruce.orcutt@utsa.edu
 # 7/2016
 # takes circulation noticies file from circjob
 # parses the file into dicts of noticies to process
@@ -28,8 +29,9 @@ from cfg_ac import *	# loads all config files (setting filenames, email addresse
 # Modifications
 # 04jan2017 epc add /mi/incoming (to commented out vbin access)
 # 1/4/2017 Per TKT-183, added findSSAN, which calls oracle, to get banner IDs
+# 5/12/2017 modified to allow for redistribution
 
-
+# PLEASE SEE THE LICENSE FILE FOR LICENSE OF USE
 
 ##############
 # GLOBALS    #
@@ -63,7 +65,7 @@ def findSSAN(patronID):
 	ssan = "NONE";
 
 	# make connection to the database
-	dsn = cx_Oracle.makedsn("localhost","1521","VGER")
+	dsn = cx_Oracle.makedsn(db_host,db_port,db_SID)
 	con = cx_Oracle.connect(user=db_user,password=db_password,dsn=dsn)
 	cur = con.cursor()
 
@@ -100,7 +102,7 @@ def findItemType(barCode):
 	itemType = "NONE";
 
 	# make connection to the database
-	dsn = cx_Oracle.makedsn("localhost","1521","VGER")
+	dsn = cx_Oracle.makedsn(db_host,db_port,db_SID)
 	con = cx_Oracle.connect(user=db_user,password=db_password,dsn=dsn)
 	cur = con.cursor()
 
@@ -180,7 +182,7 @@ def summaryForManagers():
                         "Overdue Items\t\t\t\t\t"                   + `overdueCount["itemCount"]`    	+	"\n" + \
                         "People with Overdue Items:\t\t\t"          + `overdueCount["personCount"]`	 	+	"\n" + \
                         "Overdue notices lacking email:\t\t\t"      + `overdueCount["noEmailCount"]` 	+	"\n" + \
-                        "ILL items Overdue:\t\t\t\t"   		   + `overdueCount["ill"]`          	+  "\n" + \
+                        "ILL items Overdue:\t\t\t\t"	    		+ `overdueCount["ill"]`          	+   "\n" + \
                         "\n" 								   	    + \
                         "RECALL"                                	+ "\n" + \
                         "-------"                                   + "\n" + \
@@ -206,7 +208,7 @@ def summaryForManagers():
                         "-------"                                   + "\n" + \
                         "Fine/Fee notifications:\t\t\t\t"           + `finesFeesCount["itemCount"]`            +  "\n" + \
                         "People with Fine/Fee notes:\t\t\t"         + `finesFeesCount["personCount"]`          +  "\n" + \
-                        "Fine/Fee notices lacking email:\t\t\t"     + `finesFeesCount["noEmailCount"]` +	"\n"
+                        "Fine/Fee notices lacking email:\t\t\t"     + `finesFeesCount["noEmailCount"]` 		   +  "\n"
 
 	try:
 		sendEmail(stringToSend,runSummaryTo,"Summary of Circulation Notices Run")
@@ -693,7 +695,7 @@ while index < len(circ2Overdue):
 
 	# Check for Ill user
 	if circ2Overdue[index-1]["FirstName"] == illiadFirst:
-		illiadFlag           = 1
+		illiadFlag        	 = 1
 		overdueCount["ill"] += 1
 
 		try:
@@ -775,7 +777,7 @@ while index < len(circ2Overdue):
         # Lastly, add the standard footer.
         tempText += emailFooterText2Overdue
 
-        tempText = tempText.replace("[{!LIBNUM!}]", "JPL Front Desk  - 210-458-4574\n\t\tDTL Front Desk  - 210-458-2440")
+        tempText = tempText.replace("[{!LIBNUM!}]", libraryNumbers)
 
         # Time to check if we have an email address
         if (not circ2Overdue[index-1]["Email"] or not emailPattern.match(circ2Overdue[index-1]["Email"])) \
@@ -929,7 +931,7 @@ while index < len(circ3Recall):
 		# Lastly, add the standard footer.
 		tempText += emailFooterText3Recall
 
-		tempText = tempText.replace("[{!LIBNUM!}]", "JPL Front Desk  - 210-458-4574\n\t\tDTL Front Desk  - 210-458-2440")
+		tempText = tempText.replace("[{!LIBNUM!}]", libraryNumbers)
 
 		# Time to check if we have an email address
 
@@ -1084,7 +1086,7 @@ while index < len(circ4Overduerecall):
 
 			# Lastly, add the standard footer.
 			tempText += emailFooterText4Overduerecall
-			tempText = tempText.replace("[{!LIBNUM!}]", "JPL Front Desk  - 210-458-4574\n\t\tDTL Front Desk  - 210-458-2440")
+			tempText = tempText.replace("[{!LIBNUM!}]", libraryNumbers)
 
 			# Time to check if we have an email address
 			if (not circ4Overduerecall[index-1]["Email"] or not emailPattern.match(circ4Overduerecall[index-1]["Email"])) \
@@ -1222,7 +1224,7 @@ while index < len(circ5Finesfees):
 		# Lastly, add the standard footer.
 		tempText += emailFooterText5Finesfees
 
-		tempText = tempText.replace("[{!LIBNUM!}]", "JPL Front Desk  - 210-458-4574\n\t\tDTL Front Desk  - 210-458-2440")
+		tempText = tempText.replace("[{!LIBNUM!}]", libraryNumbers)
 
 		# Time to check if we have an email address
 		if (not circ5Finesfees[index-1]["Email"] or not emailPattern.match(circ5Finesfees[index-1]["Email"])) \
@@ -1290,8 +1292,13 @@ while index < len(circ7Courtesy):
 		courtesyCount["personCount"] += 1
 		courtesyCount["itemCount"]   += 1
 
-	if not illiadFlag:
-		
+	if illiadFlag:
+		# if an ILL item, don't bother with name fields
+		tempText = '''
+                -=======RECALLED Inter-Library Loan Items=======-
+
+		'''
+	else:
 		# regular item, not illiad, so set the header area
 		# Make the intro
 		tempText = emailIntroText7Courtesy
@@ -1351,7 +1358,7 @@ while index < len(circ7Courtesy):
 		# Lastly, add the standard footer.
 		tempText += emailFooterText7Courtesy
 
-		tempText = tempText.replace("[{!LIBNUM!}]", "JPL Front Desk  - 210-458-4574\n\t\tDTL Front Desk  - 210-458-2440")
+		tempText = tempText.replace("[{!LIBNUM!}]", libraryNumbers)
 
 		# Time to check if we have an email address
 		if (not circ7Courtesy[index-1]["Email"] or not emailPattern.match(circ7Courtesy[index-1]["Email"])) \
