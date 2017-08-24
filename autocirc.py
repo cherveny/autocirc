@@ -394,6 +394,11 @@ def addEmailItem(noticeDict,patronText):
 
 		# fill in the first items details
 		returnText = returnText.replace("[{!LOC!}]",   noticeDict["Library"].lstrip(" "))
+		# Courtesy Notices have no Sequence number.  
+		# UTSA decided just not to include in any notices, as deemed unnecessary
+		# If demand for sequence numbers, will add a detection for it, and populate only if exists for notification type
+		#returnText = returnText.replace("[{!NOT!}]",   noticeDict["Sequence"].lstrip(" "))
+		returnText = returnText.replace("[{!NOT!}]",   " ")
 		returnText = returnText.replace("[{!NOT!}]",   noticeDict["Sequence"].lstrip(" "))
 		returnText = returnText.replace("[{!TITLE!}]", noticeDict["ItemTitle"].lstrip(" "))
 		returnText = returnText.replace("[{!AUTHOR!}]",noticeDict["ItemAuthor"].lstrip(" "))
